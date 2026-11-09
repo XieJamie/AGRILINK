@@ -1,0 +1,361 @@
+-- ==========================================================
+-- AGRILINK LOGISTICS MANAGEMENT AND EXPORT TRACKING SYSTEM
+-- Complete Database Setup Script (DDL, Data, Views & Procedures)
+-- Target DBMS: MS SQL Server
+-- ==========================================================
+
+-- Step 0: Ensure Target Database Exists & Is Active
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'AgriLinkDB')
+BEGIN
+    CREATE DATABASE AgriLinkDB;
+END
+GO
+
+USE AgriLinkDB;
+GO
+
+-- ==========================================================
+-- PART 1: DDL SCHEMA CREATION (TABLES & CONSTRAINTS)
+-- ==========================================================
+
+-- Drop existing tables in reverse dependency order
+IF OBJECT_ID('dbo.Payment', 'U') IS NOT NULL DROP TABLE dbo.Payment;
+IF OBJECT_ID('dbo.Invoice', 'U') IS NOT NULL DROP TABLE dbo.Invoice;
+IF OBJECT_ID('dbo.Delivery', 'U') IS NOT NULL DROP TABLE dbo.Delivery;
+IF OBJECT_ID('dbo.ShipmentTracking', 'U') IS NOT NULL DROP TABLE dbo.ShipmentTracking;
+IF OBJECT_ID('dbo.ShipmentItem', 'U') IS NOT NULL DROP TABLE dbo.ShipmentItem;
+IF OBJECT_ID('dbo.Pickup', 'U') IS NOT NULL DROP TABLE dbo.Pickup;
+IF OBJECT_ID('dbo.Shipment', 'U') IS NOT NULL DROP TABLE dbo.Shipment;
+IF OBJECT_ID('dbo.Warehouse', 'U') IS NOT NULL DROP TABLE dbo.Warehouse;
+IF OBJECT_ID('dbo.Vehicle', 'U') IS NOT NULL DROP TABLE dbo.Vehicle;
+IF OBJECT_ID('dbo.Driver', 'U') IS NOT NULL DROP TABLE dbo.Driver;
+IF OBJECT_ID('dbo.Product', 'U') IS NOT NULL DROP TABLE dbo.Product;
+IF OBJECT_ID('dbo.ProductCategory', 'U') IS NOT NULL DROP TABLE dbo.ProductCategory;
+IF OBJECT_ID('dbo.Terminal', 'U') IS NOT NULL DROP TABLE dbo.Terminal;
+IF OBJECT_ID('dbo.Client', 'U') IS NOT NULL DROP TABLE dbo.Client;
+IF OBJECT_ID('dbo.Exporter', 'U') IS NOT NULL DROP TABLE dbo.Exporter;
+IF OBJECT_ID('dbo.AppUser', 'U') IS NOT NULL DROP TABLE dbo.AppUser;
+IF OBJECT_ID('dbo.Role', 'U') IS NOT NULL DROP TABLE dbo.Role;
+GO
+
+-- 1. Role Table (Defines the 7 user roles)
+CREATE TABLE dbo.Role (
+    RoleID INT IDENTITY(1,1) PRIMARY KEY,
+    RoleName VARCHAR(50) NOT NULL UNIQUE
+);
+GO
+
+-- 2. App User Table (System login accounts for staff and clients)
+CREATE TABLE dbo.AppUser (
+    UserID INT IDENTITY(1,1) PRIMARY KEY,
+    RoleID INT NOT NULL,
+    FullName VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    Phone VARCHAR(30) NOT NULL,
+    PasswordHash VARCHAR(255) NOT NULL,
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_AppUser_Role FOREIGN KEY (RoleID) REFERENCES dbo.Role(RoleID)
+);
+GO
+
+-- 3. Exporter Table (Kenyan farmers, cooperatives, and exporters)
+CREATE TABLE dbo.Exporter (
+    ExporterID INT IDENTITY(1,1) PRIMARY KEY,
+    UserID INT NULL,
+    CompanyName VARCHAR(150) NOT NULL,
+    ContactPerson VARCHAR(100) NOT NULL,
+    Phone VARCHAR(30) NOT NULL,
+    Email VARCHAR(100) NOT NULL,
+    Address VARCHAR(255) NOT NULL,
+    CONSTRAINT FK_Exporter_AppUser FOREIGN KEY (UserID) REFERENCES dbo.AppUser(UserID)
+);
+GO
+
+-- 4. Client Table (International buyers / consignees receiving goods abroad)
+CREATE TABLE dbo.Client (
+    ClientID INT IDENTITY(1,1) PRIMARY KEY,
+    UserID INT NULL,
+    CompanyName VARCHAR(150) NOT NULL,
+    ContactPerson VARCHAR(100) NOT NULL,
+    Country VARCHAR(100) NOT NULL,
+    City VARCHAR(100) NOT NULL,
+    Address VARCHAR(255) NOT NULL,
+    Email VARCHAR(100) NOT NULL,
+    CONSTRAINT FK_Client_AppUser FOREIGN KEY (UserID) REFERENCES dbo.AppUser(UserID)
+);
+GO
+
+-- 5. Terminal Table (Airports and seaports acting as origin and destination)
+CREATE TABLE dbo.Terminal (
+    TerminalID INT IDENTITY(1,1) PRIMARY KEY,
+    TerminalName VARCHAR(150) NOT NULL,
+    TerminalType VARCHAR(20) NOT NULL CHECK (TerminalType IN ('Airport', 'Seaport')),
+    City VARCHAR(100) NOT NULL,
+    Country VARCHAR(100) NOT NULL
+);
+GO
+
+-- 6. Product Category Table (Groups products: Fruits, Vegetables, Flowers, etc.)
+CREATE TABLE dbo.ProductCategory (
+    CategoryID INT IDENTITY(1,1) PRIMARY KEY,
+    CategoryName VARCHAR(100) NOT NULL UNIQUE,
+    Description VARCHAR(255) NULL
+);
+GO
+
+-- 7. Product Table (Individual agricultural products and handling requirements)
+CREATE TABLE dbo.Product (
+    ProductID INT IDENTITY(1,1) PRIMARY KEY,
+    CategoryID INT NOT NULL,
+    ProductName VARCHAR(100) NOT NULL,
+    UnitOfMeasure VARCHAR(30) NOT NULL,
+    HandlingRequirements VARCHAR(255) NULL,
+    CONSTRAINT FK_Product_Category FOREIGN KEY (CategoryID) REFERENCES dbo.ProductCategory(CategoryID)
+);
+GO
+
+-- 8. Driver Table (Drivers linked to user accounts)
+CREATE TABLE dbo.Driver (
+    DriverID INT IDENTITY(1,1) PRIMARY KEY,
+    UserID INT NULL,
+    FullName VARCHAR(100) NOT NULL,
+    Phone VARCHAR(30) NOT NULL,
+    LicenseNumber VARCHAR(50) NOT NULL UNIQUE,
+    CONSTRAINT FK_Driver_AppUser FOREIGN KEY (UserID) REFERENCES dbo.AppUser(UserID)
+);
+GO
+
+-- 9. Vehicle Table (Trucks/vans used for local collection and transfers)
+CREATE TABLE dbo.Vehicle (
+    VehicleID INT IDENTITY(1,1) PRIMARY KEY,
+    RegistrationNumber VARCHAR(30) NOT NULL UNIQUE,
+    VehicleType VARCHAR(50) NOT NULL,
+    Capacity DECIMAL(10,2) NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1
+);
+GO
+
+-- 10. Warehouse Table (Storage facilities - cold room or ambient)
+CREATE TABLE dbo.Warehouse (
+    WarehouseID INT IDENTITY(1,1) PRIMARY KEY,
+    WarehouseName VARCHAR(100) NOT NULL,
+    Location VARCHAR(150) NOT NULL,
+    Capacity DECIMAL(12,2) NOT NULL,
+    WarehouseType VARCHAR(50) NOT NULL
+);
+GO
+
+-- 11. Shipment Table (Core entity for agricultural export bookings)
+CREATE TABLE dbo.Shipment (
+    ShipmentID INT IDENTITY(1,1) PRIMARY KEY,
+    ShipmentReference VARCHAR(50) NOT NULL UNIQUE,
+    ExporterID INT NOT NULL,
+    ClientID INT NOT NULL,
+    OriginTerminalID INT NOT NULL,
+    DestinationTerminalID INT NOT NULL,
+    WarehouseID INT NULL,
+    ShipmentDate DATE NOT NULL,
+    EstimatedDeliveryDate DATE NOT NULL,
+    TransportMethod VARCHAR(50) NOT NULL,
+    ShipmentStatus VARCHAR(50) NOT NULL DEFAULT 'Booked',
+    CONSTRAINT FK_Shipment_Exporter FOREIGN KEY (ExporterID) REFERENCES dbo.Exporter(ExporterID),
+    CONSTRAINT FK_Shipment_Client FOREIGN KEY (ClientID) REFERENCES dbo.Client(ClientID),
+    CONSTRAINT FK_Shipment_OriginTerminal FOREIGN KEY (OriginTerminalID) REFERENCES dbo.Terminal(TerminalID),
+    CONSTRAINT FK_Shipment_DestTerminal FOREIGN KEY (DestinationTerminalID) REFERENCES dbo.Terminal(TerminalID),
+    CONSTRAINT FK_Shipment_Warehouse FOREIGN KEY (WarehouseID) REFERENCES dbo.Warehouse(WarehouseID)
+);
+GO
+
+-- 12. Pickup Table (Collection of goods from farm/exporter)
+CREATE TABLE dbo.Pickup (
+    PickupID INT IDENTITY(1,1) PRIMARY KEY,
+    ShipmentID INT NOT NULL,
+    VehicleID INT NOT NULL,
+    DriverID INT NOT NULL,
+    PickupDate DATETIME NOT NULL,
+    PickupStatus VARCHAR(50) NOT NULL DEFAULT 'Scheduled',
+    CollectionNotes VARCHAR(255) NULL,
+    CONSTRAINT FK_Pickup_Shipment FOREIGN KEY (ShipmentID) REFERENCES dbo.Shipment(ShipmentID),
+    CONSTRAINT FK_Pickup_Vehicle FOREIGN KEY (VehicleID) REFERENCES dbo.Vehicle(VehicleID),
+    CONSTRAINT FK_Pickup_Driver FOREIGN KEY (DriverID) REFERENCES dbo.Driver(DriverID)
+);
+GO
+
+-- 13. ShipmentItem Table (Resolves M:N relationship between Shipment and Product)
+CREATE TABLE dbo.ShipmentItem (
+    ShipmentItemID INT IDENTITY(1,1) PRIMARY KEY,
+    ShipmentID INT NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity DECIMAL(10,2) NOT NULL,
+    Weight DECIMAL(10,2) NOT NULL,
+    PackagingType VARCHAR(50) NOT NULL,
+    CONSTRAINT FK_ShipmentItem_Shipment FOREIGN KEY (ShipmentID) REFERENCES dbo.Shipment(ShipmentID) ON DELETE CASCADE,
+    CONSTRAINT FK_ShipmentItem_Product FOREIGN KEY (ProductID) REFERENCES dbo.Product(ProductID)
+);
+GO
+
+-- 14. ShipmentTracking Table (Recording progress stages from collection to delivery)
+CREATE TABLE dbo.ShipmentTracking (
+    TrackingID INT IDENTITY(1,1) PRIMARY KEY,
+    ShipmentID INT NOT NULL,
+    Status VARCHAR(100) NOT NULL,
+    Location VARCHAR(150) NOT NULL,
+    Remarks VARCHAR(255) NULL,
+    RecordedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_ShipmentTracking_Shipment FOREIGN KEY (ShipmentID) REFERENCES dbo.Shipment(ShipmentID) ON DELETE CASCADE
+);
+GO
+
+-- 15. Delivery Table (Final delivery confirmation to consignee)
+CREATE TABLE dbo.Delivery (
+    DeliveryID INT IDENTITY(1,1) PRIMARY KEY,
+    ShipmentID INT NOT NULL UNIQUE,
+    DeliveryDate DATE NOT NULL,
+    ReceivedBy VARCHAR(100) NOT NULL,
+    DeliveryStatus VARCHAR(50) NOT NULL DEFAULT 'Delivered',
+    DeliveryNotes VARCHAR(255) NULL,
+    CONSTRAINT FK_Delivery_Shipment FOREIGN KEY (ShipmentID) REFERENCES dbo.Shipment(ShipmentID)
+);
+GO
+
+-- 16. Invoice Table (Billing for a shipment)
+CREATE TABLE dbo.Invoice (
+    InvoiceID INT IDENTITY(1,1) PRIMARY KEY,
+    ShipmentID INT NOT NULL UNIQUE,
+    InvoiceDate DATE NOT NULL,
+    DueDate DATE NOT NULL,
+    TotalAmount DECIMAL(12,2) NOT NULL,
+    Currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+    InvoiceStatus VARCHAR(50) NOT NULL DEFAULT 'Unpaid',
+    CONSTRAINT FK_Invoice_Shipment FOREIGN KEY (ShipmentID) REFERENCES dbo.Shipment(ShipmentID)
+);
+GO
+
+-- 17. Payment Table (Payments made against an invoice)
+CREATE TABLE dbo.Payment (
+    PaymentID INT IDENTITY(1,1) PRIMARY KEY,
+    InvoiceID INT NOT NULL,
+    PaymentDate DATE NOT NULL,
+    AmountPaid DECIMAL(12,2) NOT NULL,
+    PaymentMethod VARCHAR(50) NOT NULL,
+    ReferenceNumber VARCHAR(100) NOT NULL UNIQUE,
+    CONSTRAINT FK_Payment_Invoice FOREIGN KEY (InvoiceID) REFERENCES dbo.Invoice(InvoiceID)
+);
+GO
+
+-- ==========================================================
+-- PART 2: SAMPLE DATA SEEDING
+-- ==========================================================
+
+-- Insert Roles
+INSERT INTO dbo.Role (RoleName) VALUES 
+('System Administrator'),
+('Logistics Administrator'),
+('Warehouse Staff'),
+('Driver'),
+('Finance Staff'),
+('Exporter'),
+('Client');
+
+-- Insert Product Categories
+INSERT INTO dbo.ProductCategory (CategoryName, Description) VALUES 
+('Flowers', 'Fresh cut flowers and roses'),
+('Vegetables', 'Fresh French beans, snow peas,rosemary and herbs'),
+('Fruits', 'Avocados, mangoes, guavas and pineapples');
+
+-- Insert Products
+INSERT INTO dbo.Product (CategoryID, ProductName, UnitOfMeasure, HandlingRequirements) VALUES 
+(1, 'Roses (Red)', 'Boxes', 'Cold Room 2-4°C'),
+(2, 'French Beans', 'Cartons', 'Cold Room 4-6°C'),
+(3, 'Hass Avocados', 'Boxes', 'Ambient / Controlled Ventilation');
+
+-- Insert Terminals
+INSERT INTO dbo.Terminal (TerminalName, TerminalType, City, Country) VALUES 
+('Jomo Kenyatta International Airport (JKIA)', 'Airport', 'Nairobi', 'Kenya'),
+('Dubai International Airport (DXB)', 'Airport', 'Dubai', 'UAE'),
+('Schiphol Airport', 'Airport', 'Amsterdam', 'Netherlands');
+
+-- Insert Warehouses
+INSERT INTO dbo.Warehouse (WarehouseName, Location, Capacity, WarehouseType) VALUES 
+('Nairobi Cold Hub Alpha', 'Embakasi, Nairobi', 50000.00, 'Cold Room'),
+('Limuru Produce Depot', 'Limuru', 20000.00, 'Ambient');
+
+-- Insert Vehicles & Drivers
+INSERT INTO dbo.Vehicle (RegistrationNumber, VehicleType, Capacity) VALUES 
+('KDA 123A', 'Refrigerated Van', 3500.00),
+('KBC 456B', 'Heavy Truck', 12000.00);
+
+INSERT INTO dbo.Driver (FullName, Phone, LicenseNumber) VALUES 
+('John Kamau', '+254712345678', 'DL-98765'),
+('Peter Omondi', '+254723456789', 'DL-54321');
+
+-- Insert Exporters & Clients
+INSERT INTO dbo.Exporter (CompanyName, ContactPerson, Phone, Email, Address) VALUES 
+('Rift Valley Flora Ltd', 'Sarah Koech', '+254733111222', 'sarah@riftvalleyflora.co.ke', 'Naivasha Farm Rd'),
+('Mount Kenya Fresh Produce', 'David Njoroge', '+254722333444', 'dnjoroge@mtkenya.co.ke', 'Timau, Nanyuki');
+
+INSERT INTO dbo.Client (CompanyName, ContactPerson, Country, City, Address, Email) VALUES 
+('Gulf Logistics FZE', 'Ahmed Al-Maktoum', 'UAE', 'Dubai', 'Airport Freezone 4', 'ahmed@gulflogistics.ae'),
+('Amsterdam Fresh BV', 'Jan de Vries', 'Netherlands', 'Amsterdam', 'Schiphol Logistics Park 12', 'jandevries@amsterdamfresh.nl');
+GO
+
+-- ==========================================================
+-- PART 3: STORED PROCEDURES AND VIEWS
+-- ==========================================================
+
+-- 1. Shipment Search & Filter Stored Procedure
+IF OBJECT_ID('dbo.sp_SearchShipments', 'P') IS NOT NULL DROP PROCEDURE dbo.sp_SearchShipments;
+GO
+
+CREATE PROCEDURE dbo.sp_SearchShipments
+    @ExporterID INT = NULL,
+    @ClientID INT = NULL,
+    @DestinationTerminalID INT = NULL,
+    @ShipmentStatus VARCHAR(50) = NULL,
+    @StartDate DATE = NULL,
+    @EndDate DATE = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        s.ShipmentID,
+        s.ShipmentReference,
+        e.CompanyName AS ExporterName,
+        c.CompanyName AS ClientName,
+        t.TerminalName AS DestinationTerminal,
+        s.ShipmentDate,
+        s.EstimatedDeliveryDate,
+        s.TransportMethod,
+        s.ShipmentStatus
+    FROM dbo.Shipment s
+    INNER JOIN dbo.Exporter e ON s.ExporterID = e.ExporterID
+    INNER JOIN dbo.Client c ON s.ClientID = c.ClientID
+    INNER JOIN dbo.Terminal t ON s.DestinationTerminalID = t.TerminalID
+    WHERE (@ExporterID IS NULL OR s.ExporterID = @ExporterID)
+      AND (@ClientID IS NULL OR s.ClientID = @ClientID)
+      AND (@DestinationTerminalID IS NULL OR s.DestinationTerminalID = @DestinationTerminalID)
+      AND (@ShipmentStatus IS NULL OR s.ShipmentStatus = @ShipmentStatus)
+      AND (@StartDate IS NULL OR s.ShipmentDate >= @StartDate)
+      AND (@EndDate IS NULL OR s.ShipmentDate <= @EndDate);
+END;
+GO
+
+-- 2. Shipment Tracking History View
+IF OBJECT_ID('dbo.vw_ShipmentTrackingSummary', 'V') IS NOT NULL DROP VIEW dbo.vw_ShipmentTrackingSummary;
+GO
+
+CREATE VIEW dbo.vw_ShipmentTrackingSummary AS
+SELECT 
+    s.ShipmentReference,
+    e.CompanyName AS Exporter,
+    c.CompanyName AS Consignee,
+    st.Status AS CurrentStage,
+    st.Location,
+    st.Remarks,
+    st.RecordedAt
+FROM dbo.ShipmentTracking st
+INNER JOIN dbo.Shipment s ON st.ShipmentID = s.ShipmentID
+INNER JOIN dbo.Exporter e ON s.ExporterID = e.ExporterID
+INNER JOIN dbo.Client c ON s.ClientID = c.ClientID;
+GO
