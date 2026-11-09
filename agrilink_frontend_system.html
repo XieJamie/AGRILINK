@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriLink - Logistics Management & Export Tracking System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: {
+                            50: '#F2F7F3',
+                            100: '#E1EFE4',
+                            500: '#2D6A4F',
+                            600: '#1B4332',
+                            700: '#143427',
+                            800: '#0D241B',
+                            900: '#081711',
+                        },
+                        beige: {
+                            50: '#FAF8F5',
+                            100: '#F5F2EB',
+                            200: '#EAE3D2',
+                            300: '#DFD5BE',
+                            400: '#CBBBA0',
+                            500: '#B5A283',
+                        },
+                        charcoal: '#1A221E',
+                        slatewood: '#4A5850',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F2EB;
+            color: #1A221E;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Outfit', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #EAE3D2;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #B5A283;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1B4332;
+        }
+        .beige-card {
+            background-color: #FFFFFF;
+            border: 1px solid #EAE3D2;
+            box-shadow: 0 4px 15px -2px rgba(27, 67, 50, 0.04);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row antialiased overflow-x-hidden">
+
+    <!-- Mobile Top Navigation Header -->
+    <header class="md:hidden bg-forest-800 text-beige-100 p-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-lg bg-forest-600 flex items-center justify-center text-amber-300 font-bold border border-forest-500">
+                <i class="fa-solid fa-leaf text-amber-300"></i>
+            </div>
+            <div>
+                <span class="font-heading font-bold text-lg text-white block leading-none">AgriLink</span>
+                <span class="text-[10px] text-beige-300 uppercase tracking-wider">Logistics & Export Tracking</span>
+            </div>
+        </div>
+        <button id="mobileMenuBtn" class="text-beige-100 p-2 rounded-lg hover:bg-forest-700">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out z-40 w-64 bg-forest-800 text-beige-100 flex flex-col justify-between shadow-xl md:static md:shadow-none">
+        <div>
+            <!-- Header Logo -->
+            <div class="p-5 hidden md:flex items-center space-x-3 border-b border-forest-700/60">
+                <div class="w-10 h-10 rounded-xl bg-forest-600 flex items-center justify-center text-amber-300 shadow-inner border border-forest-500">
+                    <i class="fa-solid fa-leaf text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading font-bold text-xl tracking-wide text-white leading-tight">AgriLink</h1>
+                    <p class="text-[11px] text-beige-300 uppercase tracking-widest font-semibold">Logistics Portal</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-3 space-y-1">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-beige-400/80 my-2">Main Menu</p>
+                
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-colors bg-forest-600 text-white shadow-sm">
+                    <i class="fa-solid fa-chart-line w-4 text-center"></i>
+                    <span>Overview Dashboard</span>
+                </button>
+
+                <button onclick="switchTab('shipments')" id="nav-shipments" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold text-beige-200 hover:bg-forest-700 hover:text-white transition-colors">
+                    <i class="fa-solid fa-boxes-packing w-4 text-center"></i>
+                    <span>Shipment Bookings</span>
+                </button>
+
+                <button onclick="switchTab('tracking')" id="nav-tracking" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold text-beige-200 hover:bg-forest-700 hover:text-white transition-colors">
+                    <i class="fa-solid fa-route w-4 text-center"></i>
+                    <span>Live Tracking Engine</span>
+                </button>
+
+                <button onclick="switchTab('warehouse')" id="nav-warehouse" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold text-beige-200 hover:bg-forest-700 hover:text-white transition-colors">
+                    <i class="fa-solid fa-warehouse w-4 text-center"></i>
+                    <span>Warehouse Storage</span>
+                </button>
+
+                <button onclick="switchTab('fleet')" id="nav-fleet" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold text-beige-200 hover:bg-forest-700 hover:text-white transition-colors">
+                    <i class="fa-solid fa-truck-ramp-box w-4 text-center"></i>
+                    <span>Fleet & Drivers</span>
+                </button>
+
+                <button onclick="switchTab('finance')" id="nav-finance" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold text-beige-200 hover:bg-forest-700 hover:text-white transition-colors">
+                    <i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i>
+                    <span>Billing & Invoices</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar User Footer -->
+        <div class="p-4 border-t border-forest-700/60 bg-forest-900/40 flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-full bg-forest-600 border border-beige-300 flex items-center justify-center font-bold text-white text-xs">
+                RJ
+            </div>
+            <div class="text-[11px] text-beige-300">
+                <p class="font-semibold text-white leading-none">Roy James Karoki</p>
+                <p class="text-[10px] text-beige-400 mt-0.5">Logistics Administrator</p>
+            </div>
+        </div>
+    </aside>
+
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto min-h-screen">
+
+        <!-- Top Header Bar -->
+        <header class="bg-white border-b border-beige-300 px-6 py-4 hidden md:flex items-center justify-between sticky top-0 z-20 shadow-sm">
+            <div>
+                <h2 id="pageTitle" class="text-xl font-bold font-heading text-forest-800">Overview Dashboard</h2>
+                <p class="text-xs text-slatewood">Real-Time Agricultural Export Logistics Management</p>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="openNewBookingModal()" class="bg-forest-600 hover:bg-forest-700 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-2 transition-all shadow-sm">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Book Shipment</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Workspace Container -->
+        <div class="p-4 sm:p-6 lg:p-8 flex-1 space-y-6">
+
+            <!-- ================= MODULE 1: DASHBOARD OVERVIEW ================= -->
+            <section id="module-dashboard" class="space-y-6">
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="beige-card p-5 rounded-xl border-l-4 border-l-forest-600">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs font-semibold text-slatewood uppercase tracking-wider">Total Active Shipments</p>
+                                <p class="text-2xl font-bold font-heading text-forest-900 mt-1" id="kpi-active-shipments">0</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-lg bg-forest-50 text-forest-600 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-boxes-packing"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="beige-card p-5 rounded-xl border-l-4 border-l-amber-500">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs font-semibold text-slatewood uppercase tracking-wider">Total Export Revenue</p>
+                                <p class="text-2xl font-bold font-heading text-forest-900 mt-1" id="kpi-total-revenue">$0</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="beige-card p-5 rounded-xl border-l-4 border-l-blue-600">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs font-semibold text-slatewood uppercase tracking-wider">Cold Storage Facilities</p>
+                                <p class="text-2xl font-bold font-heading text-forest-900 mt-1" id="kpi-warehouse-count">0</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-warehouse"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="beige-card p-5 rounded-xl border-l-4 border-l-emerald-600">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs font-semibold text-slatewood uppercase tracking-wider">Registered Exporters</p>
+                                <p class="text-2xl font-bold font-heading text-forest-900 mt-1" id="kpi-exporters-count">0</p>
+                            </div>
+                            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Active Shipments Table -->
+                <div class="beige-card rounded-xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-beige-200 pb-3">
+                        <h3 class="font-heading font-bold text-forest-800 text-base">
+                            <i class="fa-solid fa-list-check text-forest-600 mr-2"></i> Recent Export Bookings
+                        </h3>
+                        <button onclick="switchTab('shipments')" class="text-xs font-semibold text-forest-600 hover:underline">View All &rarr;</button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[11px] font-bold text-slatewood uppercase tracking-wider border-b border-beige-300 bg-beige-100/50">
+                                    <th class="py-2.5 px-3">Reference</th>
+                                    <th class="py-2.5 px-3">Exporter</th>
+                                    <th class="py-2.5 px-3">Consignee</th>
+                                    <th class="py-2.5 px-3">Destination</th>
+                                    <th class="py-2.5 px-3">Transport</th>
+                                    <th class="py-2.5 px-3">Status</th>
+                                    <th class="py-2.5 px-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-table-body" class="divide-y divide-beige-200 text-xs">
+                                <!-- Dynamic rows populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= MODULE 2: SHIPMENT BOOKINGS ================= -->
+            <section id="module-shipments" class="space-y-6 hidden">
+                <div class="beige-card rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-semibold text-slatewood">Search:</span>
+                            <input type="text" id="shipmentSearchInput" oninput="applyShipmentFilter()" placeholder="Search Ref or Exporter..." class="bg-beige-50 border border-beige-300 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-forest-600 w-48">
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-semibold text-slatewood">Status:</span>
+                            <select id="shipmentStatusFilter" onchange="applyShipmentFilter()" class="bg-beige-50 border border-beige-300 text-xs rounded-lg px-3 py-1.5 font-semibold focus:outline-none">
+                                <option value="">All Statuses</option>
+                                <option value="Booked">Booked</option>
+                                <option value="In Warehouse">In Warehouse</option>
+                                <option value="In Transit">In Transit</option>
+                                <option value="Delivered">Delivered</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="openNewBookingModal()" class="bg-forest-600 hover:bg-forest-700 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-2 w-full md:w-auto justify-center">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>New Shipment Booking</span>
+                    </button>
+                </div>
+
+                <!-- Master Shipments Table -->
+                <div class="beige-card rounded-xl overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[11px] font-bold text-slatewood uppercase tracking-wider border-b border-beige-300 bg-beige-100">
+                                    <th class="py-3 px-4">Shipment ID</th>
+                                    <th class="py-3 px-4">Reference</th>
+                                    <th class="py-3 px-4">Exporter</th>
+                                    <th class="py-3 px-4">Client</th>
+                                    <th class="py-3 px-4">Method</th>
+                                    <th class="py-3 px-4">Shipment Date</th>
+                                    <th class="py-3 px-4">Status</th>
+                                    <th class="py-3 px-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="master-shipments-table-body" class="divide-y divide-beige-200 text-xs">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= MODULE 3: LIVE TRACKING ================= -->
+            <section id="module-tracking" class="space-y-6 hidden">
+                <div class="beige-card p-6 rounded-xl text-center max-w-xl mx-auto space-y-4">
+                    <h3 class="text-lg font-bold font-heading text-forest-900">Track Export Cargo</h3>
+                    <p class="text-xs text-slatewood">Select or enter a Shipment Reference code to inspect progress history</p>
+                    
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="trackingSearchInput" value="AGL-8941" class="bg-beige-50 border border-beige-300 text-xs rounded-lg px-3 py-2 w-full uppercase font-bold">
+                        <button onclick="searchTrackingLog()" class="bg-forest-600 text-white text-xs px-4 py-2 rounded-lg font-semibold shrink-0 hover:bg-forest-700">Track Cargo</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Tracking Timeline -->
+                    <div class="beige-card p-6 rounded-xl md:col-span-2 space-y-4">
+                        <div class="flex justify-between items-center border-b border-beige-200 pb-3">
+                            <h4 class="font-heading font-bold text-forest-800 text-sm">
+                                Progress History: <span id="currentTrackingRef" class="font-mono text-forest-600">AGL-8941</span>
+                            </h4>
+                            <button onclick="openUpdateTrackingModal()" class="bg-forest-50 border border-forest-300 text-forest-800 text-xs px-3 py-1.5 rounded-lg font-semibold hover:bg-forest-100">
+                                + Log Event Stage
+                            </button>
+                        </div>
+
+                        <div id="trackingTimelineContainer" class="space-y-4 font-sans text-xs">
+                            <!-- Dynamic items -->
+                        </div>
+                    </div>
+
+                    <!-- Stage Summary Card -->
+                    <div class="beige-card p-5 rounded-xl space-y-3">
+                        <h4 class="font-heading font-bold text-forest-800 text-sm border-b border-beige-200 pb-2">Export Journey Stages</h4>
+                        <ul class="text-xs text-slatewood space-y-2">
+                            <li class="flex items-center space-x-2"><i class="fa-solid fa-circle-check text-emerald-600"></i> <span>1. Farm Collection</span></li>
+                            <li class="flex items-center space-x-2"><i class="fa-solid fa-circle-check text-emerald-600"></i> <span>2. Cold Storage Intake</span></li>
+                            <li class="flex items-center space-x-2"><i class="fa-solid fa-circle-check text-emerald-600"></i> <span>3. Airport Terminal Handling</span></li>
+                            <li class="flex items-center space-x-2"><i class="fa-solid fa-circle-check text-emerald-600"></i> <span>4. International Transit</span></li>
+                            <li class="flex items-center space-x-2"><i class="fa-solid fa-circle text-beige-300"></i> <span>5. Consignee Delivery</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= MODULE 4: WAREHOUSES ================= -->
+            <section id="module-warehouse" class="space-y-6 hidden">
+                <div class="beige-card p-5 rounded-xl space-y-4">
+                    <h3 class="font-heading font-bold text-forest-800 text-base border-b border-beige-200 pb-3">
+                        Storage Facilities & Cold Hubs
+                    </h3>
+
+                    <div id="warehouseCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Dynamic Warehouse Cards -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= MODULE 5: FLEET & DRIVERS ================= -->
+            <section id="module-fleet" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Fleet Vehicles Table -->
+                    <div class="beige-card p-5 rounded-xl space-y-4">
+                        <h3 class="font-heading font-bold text-forest-800 text-base border-b border-beige-200 pb-3">
+                            Vehicles & Drivers
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="bg-beige-100 font-bold border-b border-beige-300">
+                                        <th class="py-2 px-3">Reg Number</th>
+                                        <th class="py-2 px-3">Type</th>
+                                        <th class="py-2 px-3">Capacity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fleetTableBody" class="divide-y divide-beige-200">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Dispatch Form -->
+                    <div class="beige-card p-5 rounded-xl space-y-4">
+                        <h3 class="font-heading font-bold text-forest-800 text-base border-b border-beige-200 pb-3">
+                            Assign Farm Pickup
+                        </h3>
+
+                        <form onsubmit="handleDispatchPickupSubmit(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block font-semibold text-slatewood mb-1">Select Shipment</label>
+                                <select id="pickupShipmentSelect" class="w-full bg-beige-50 border border-beige-300 rounded p-2"></select>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slatewood mb-1">Assign Driver</label>
+                                <select id="pickupDriverSelect" class="w-full bg-beige-50 border border-beige-300 rounded p-2"></select>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slatewood mb-1">Assign Vehicle</label>
+                                <select id="pickupVehicleSelect" class="w-full bg-beige-50 border border-beige-300 rounded p-2"></select>
+                            </div>
+                            <button type="submit" class="w-full bg-forest-600 text-white font-bold py-2 rounded hover:bg-forest-700">
+                                Confirm Pickup Dispatch
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= MODULE 6: FINANCE & INVOICES ================= -->
+            <section id="module-finance" class="space-y-6 hidden">
+                <div class="beige-card p-5 rounded-xl space-y-4">
+                    <div class="flex justify-between items-center border-b border-beige-200 pb-3">
+                        <h3 class="font-heading font-bold text-forest-800 text-base">
+                            Invoices & Payment Records
+                        </h3>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-beige-100 font-bold border-b border-beige-300">
+                                    <th class="py-2.5 px-3">Invoice ID</th>
+                                    <th class="py-2.5 px-3">Shipment Ref</th>
+                                    <th class="py-2.5 px-3">Total Amount</th>
+                                    <th class="py-2.5 px-3">Status</th>
+                                    <th class="py-2.5 px-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="financeTableBody" class="divide-y divide-beige-200">
+                                <!-- Dynamic -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Modal 1: New Shipment Booking Form -->
+    <div id="newBookingModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="beige-card bg-white rounded-xl w-full max-w-xl overflow-hidden shadow-2xl">
+            <div class="bg-forest-800 text-white p-4 flex justify-between items-center">
+                <h3 class="font-heading font-bold text-base flex items-center">
+                    <i class="fa-solid fa-boxes-packing mr-2 text-amber-300"></i> Book New Agricultural Shipment
+                </h3>
+                <button onclick="closeNewBookingModal()" class="text-beige-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form onsubmit="handleNewBookingSubmit(event)" class="p-5 space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slatewood mb-1">Shipment Reference *</label>
+                        <input type="text" id="modal-ref" value="AGL-9000" required class="w-full bg-beige-50 border border-beige-300 rounded p-2 font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slatewood mb-1">Exporter *</label>
+                        <select id="modal-exporter" class="w-full bg-beige-50 border border-beige-300 rounded p-2"></select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slatewood mb-1">Client / Consignee *</label>
+                        <select id="modal-client" class="w-full bg-beige-50 border border-beige-300 rounded p-2"></select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slatewood mb-1">Transport Method *</label>
+                        <select id="modal-method" class="w-full bg-beige-50 border border-beige-300 rounded p-2">
+                            <option value="Air Freight">Air Freight</option>
+                            <option value="Sea Freight">Sea Freight</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slatewood mb-1">Shipment Date *</label>
+                        <input type="date" id="modal-date" value="2026-11-09" required class="w-full bg-beige-50 border border-beige-300 rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slatewood mb-1">Est Delivery Date *</label>
+                        <input type="date" id="modal-eta" value="2026-11-14" required class="w-full bg-beige-50 border border-beige-300 rounded p-2">
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-beige-200 flex justify-end space-x-2">
+                    <button type="button" onclick="closeNewBookingModal()" class="px-3 py-1.5 rounded bg-beige-200 text-slatewood font-semibold">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 rounded bg-forest-600 text-white font-bold hover:bg-forest-700">Save Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: Update Tracking Stage -->
+    <div id="updateTrackingModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="beige-card bg-white rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="bg-forest-800 text-white p-4 flex justify-between items-center">
+                <h3 class="font-heading font-bold text-base">
+                    <i class="fa-solid fa-pen-to-square mr-2 text-amber-300"></i> Log Tracking Event Stage
+                </h3>
+                <button onclick="closeUpdateTrackingModal()" class="text-beige-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form onsubmit="handleUpdateTrackingSubmit(event)" class="p-5 space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slatewood mb-1">Stage Status *</label>
+                    <select id="track-modal-stage" class="w-full bg-beige-50 border border-beige-300 rounded p-2">
+                        <option value="Farm Pickup Completed">Farm Pickup Completed</option>
+                        <option value="Received in Cold Storage">Received in Cold Storage</option>
+                        <option value="In Transit">In Transit</option>
+                        <option value="Delivered">Delivered</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slatewood mb-1">Location *</label>
+                    <input type="text" id="track-modal-location" value="JKIA Airport, Nairobi" required class="w-full bg-beige-50 border border-beige-300 rounded p-2">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slatewood mb-1">Remarks</label>
+                    <input type="text" id="track-modal-remarks" value="Temperature inspected at 3°C" class="w-full bg-beige-50 border border-beige-300 rounded p-2">
+                </div>
+                <div class="pt-3 border-t border-beige-200 flex justify-end space-x-2">
+                    <button type="button" onclick="closeUpdateTrackingModal()" class="px-3 py-1.5 rounded bg-beige-200 text-slatewood">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 rounded bg-forest-600 text-white font-bold hover:bg-forest-700">Log Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Pure Frontend Application Logic -->
+    <script>
+        // In-Memory Data Store
+        const appState = {
+            exporters: [
+                { ExporterID: 1, CompanyName: 'Rift Valley Flora Ltd', ContactPerson: 'Sarah Koech', Phone: '+254733111222', Email: 'sarah@riftvalleyflora.co.ke' },
+                { ExporterID: 2, CompanyName: 'Mount Kenya Fresh Produce', ContactPerson: 'David Njoroge', Phone: '+254722333444', Email: 'dnjoroge@mtkenya.co.ke' }
+            ],
+            clients: [
+                { ClientID: 1, CompanyName: 'Gulf Logistics FZE', ContactPerson: 'Ahmed Al-Maktoum', Country: 'UAE', City: 'Dubai' },
+                { ClientID: 2, CompanyName: 'Amsterdam Fresh BV', ContactPerson: 'Jan de Vries', Country: 'Netherlands', City: 'Amsterdam' }
+            ],
+            warehouses: [
+                { WarehouseID: 1, WarehouseName: 'Nairobi Cold Hub Alpha', Location: 'Embakasi, Nairobi', Capacity: 50000.00, Type: 'Cold Room' },
+                { WarehouseID: 2, WarehouseName: 'Limuru Produce Depot', Location: 'Limuru', Capacity: 20000.00, Type: 'Ambient' }
+            ],
+            vehicles: [
+                { VehicleID: 1, RegistrationNumber: 'KDA 123A', VehicleType: 'Refrigerated Van', Capacity: 3500.00 },
+                { VehicleID: 2, RegistrationNumber: 'KBC 456B', VehicleType: 'Heavy Truck', Capacity: 12000.00 }
+            ],
+            drivers: [
+                { DriverID: 1, FullName: 'John Kamau', Phone: '+254712345678', LicenseNumber: 'DL-98765' },
+                { DriverID: 2, FullName: 'Peter Omondi', Phone: '+254723456789', LicenseNumber: 'DL-54321' }
+            ],
+            shipments: [
+                { ShipmentID: 1, ShipmentReference: 'AGL-8941', ExporterID: 1, ClientID: 1, ShipmentDate: '2026-11-08', EstimatedDeliveryDate: '2026-11-12', TransportMethod: 'Air Freight', ShipmentStatus: 'In Transit' },
+                { ShipmentID: 2, ShipmentReference: 'AGL-8942', ExporterID: 2, ClientID: 2, ShipmentDate: '2026-11-09', EstimatedDeliveryDate: '2026-11-13', TransportMethod: 'Air Freight', ShipmentStatus: 'In Warehouse' },
+                { ShipmentID: 3, ShipmentReference: 'AGL-8940', ExporterID: 1, ClientID: 2, ShipmentDate: '2026-11-05', EstimatedDeliveryDate: '2026-11-08', TransportMethod: 'Air Freight', ShipmentStatus: 'Delivered' }
+            ],
+            trackingLogs: [
+                { TrackingID: 1, ShipmentID: 1, Status: 'Shipment Booked', Location: 'Nairobi Office', Remarks: 'Booking created', RecordedAt: '2026-11-08 09:00' },
+                { TrackingID: 2, ShipmentID: 1, Status: 'Farm Pickup Completed', Location: 'Naivasha Farm', Remarks: 'Picked up by Driver John Kamau', RecordedAt: '2026-11-08 14:30' },
+                { TrackingID: 3, ShipmentID: 1, Status: 'In Transit', Location: 'JKIA Airport', Remarks: 'Departed on Flight KQ310', RecordedAt: '2026-11-09 06:15' },
+                { TrackingID: 4, ShipmentID: 2, Status: 'Received in Cold Storage', Location: 'Nairobi Cold Hub Alpha', Remarks: 'Temp at 2.4°C', RecordedAt: '2026-11-09 11:20' }
+            ],
+            invoices: [
+                { InvoiceID: 1, ShipmentID: 1, InvoiceDate: '2026-11-08', DueDate: '2026-11-20', TotalAmount: 14200.00, Currency: 'USD', InvoiceStatus: 'Unpaid' },
+                { InvoiceID: 2, ShipmentID: 3, InvoiceDate: '2026-11-05', DueDate: '2026-11-18', TotalAmount: 28650.00, Currency: 'USD', InvoiceStatus: 'Paid' }
+            ]
+        };
+
+        // UI Setup & Mobile Menu Handlers
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshFullUI();
+
+            document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+                document.getElementById('sidebarBackdrop').classList.toggle('hidden');
+            });
+            document.getElementById('sidebarBackdrop').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('sidebarBackdrop').classList.add('hidden');
+            });
+        });
+
+        // Refresh UI Views
+        function refreshFullUI() {
+            renderKPIs();
+            renderDashboardTable();
+            renderMasterShipmentsTable(appState.shipments);
+            searchTrackingLog();
+            renderWarehouses();
+            renderFleet();
+            renderFinance();
+            populateFormDropdowns();
+        }
+
+        // Render Dashboard Metrics
+        function renderKPIs() {
+            document.getElementById('kpi-active-shipments').innerText = appState.shipments.filter(s => s.ShipmentStatus !== 'Delivered').length;
+            const totalRev = appState.invoices.reduce((acc, inv) => acc + inv.TotalAmount, 0);
+            document.getElementById('kpi-total-revenue').innerText = '$' + totalRev.toLocaleString();
+            document.getElementById('kpi-warehouse-count').innerText = appState.warehouses.length;
+            document.getElementById('kpi-exporters-count').innerText = appState.exporters.length;
+        }
+
+        // Dashboard Table
+        function renderDashboardTable() {
+            const tbody = document.getElementById('dashboard-table-body');
+            tbody.innerHTML = '';
+            
+            appState.shipments.slice(0, 5).forEach(s => {
+                const exp = appState.exporters.find(e => e.ExporterID === s.ExporterID);
+                const cli = appState.clients.find(c => c.ClientID === s.ClientID);
+                
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-beige-100/50';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-bold text-forest-700">${s.ShipmentReference}</td>
+                    <td class="py-2.5 px-3 font-semibold text-charcoal">${exp ? exp.CompanyName : ''}</td>
+                    <td class="py-2.5 px-3 text-slatewood">${cli ? cli.CompanyName : ''}</td>
+                    <td class="py-2.5 px-3">${cli ? cli.City + ', ' + cli.Country : 'N/A'}</td>
+                    <td class="py-2.5 px-3">${s.TransportMethod}</td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">${s.ShipmentStatus}</span></td>
+                    <td class="py-2.5 px-3 text-right">
+                        <button onclick="quickTrack('${s.ShipmentReference}')" class="text-xs text-forest-600 font-semibold hover:underline">Track &rarr;</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filterable Shipment Table
+        function applyShipmentFilter() {
+            const searchVal = document.getElementById('shipmentSearchInput').value.toLowerCase().trim();
+            const statusVal = document.getElementById('shipmentStatusFilter').value;
+
+            let filtered = appState.shipments.filter(s => {
+                const exp = appState.exporters.find(e => e.ExporterID === s.ExporterID);
+                const matchesSearch = s.ShipmentReference.toLowerCase().includes(searchVal) || 
+                                     (exp && exp.CompanyName.toLowerCase().includes(searchVal));
+                const matchesStatus = statusVal === "" || s.ShipmentStatus === statusVal;
+                return matchesSearch && matchesStatus;
+            });
+
+            renderMasterShipmentsTable(filtered);
+        }
+
+        function renderMasterShipmentsTable(dataset) {
+            const tbody = document.getElementById('master-shipments-table-body');
+            tbody.innerHTML = '';
+
+            dataset.forEach(s => {
+                const exp = appState.exporters.find(e => e.ExporterID === s.ExporterID);
+                const cli = appState.clients.find(c => c.ClientID === s.ClientID);
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-beige-100/60';
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-slatewood">${s.ShipmentID}</td>
+                    <td class="py-3 px-4 font-bold text-forest-800">${s.ShipmentReference}</td>
+                    <td class="py-3 px-4 font-semibold text-charcoal">${exp ? exp.CompanyName : ''}</td>
+                    <td class="py-3 px-4 text-slatewood">${cli ? cli.CompanyName : ''}</td>
+                    <td class="py-3 px-4">${s.TransportMethod}</td>
+                    <td class="py-3 px-4">${s.ShipmentDate}</td>
+                    <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">${s.ShipmentStatus}</span></td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="quickTrack('${s.ShipmentReference}')" class="bg-forest-50 border border-forest-300 text-forest-800 px-2.5 py-1 rounded text-xs font-semibold hover:bg-forest-100">Track</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Live Tracking Render
+        function searchTrackingLog() {
+            const ref = document.getElementById('trackingSearchInput').value.trim();
+            document.getElementById('currentTrackingRef').innerText = ref;
+            
+            const s = appState.shipments.find(item => item.ShipmentReference === ref);
+            const container = document.getElementById('trackingTimelineContainer');
+            container.innerHTML = '';
+
+            if (!s) {
+                container.innerHTML = `<p class="text-slatewood italic">No shipment record found for reference ${ref}</p>`;
+                return;
+            }
+
+            const logs = appState.trackingLogs.filter(t => t.ShipmentID === s.ShipmentID);
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="text-slatewood italic">No event tracking stages logged yet for reference ${ref}</p>`;
+                return;
+            }
+
+            logs.forEach(rec => {
+                const item = document.createElement('div');
+                item.className = 'p-3 bg-beige-50 rounded-lg border border-beige-200 space-y-1';
+                item.innerHTML = `
+                    <div class="flex justify-between font-bold text-forest-900">
+                        <span>${rec.Status}</span>
+                        <span class="text-[10px] text-slatewood">${rec.RecordedAt}</span>
+                    </div>
+                    <p class="text-slatewood">Location: <span class="font-semibold text-charcoal">${rec.Location}</span></p>
+                    <p class="text-[11px] text-slatewood italic">"${rec.Remarks}"</p>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Render Warehouses
+        function renderWarehouses() {
+            const container = document.getElementById('warehouseCardsContainer');
+            container.innerHTML = '';
+            
+            appState.warehouses.forEach(w => {
+                const card = document.createElement('div');
+                card.className = 'p-4 bg-beige-50 rounded-lg border border-beige-300 space-y-2';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-forest-900">${w.WarehouseName}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">${w.Type}</span>
+                    </div>
+                    <p class="text-xs text-slatewood">Location: ${w.Location}</p>
+                    <p class="text-xs font-semibold text-forest-800">Capacity: ${w.Capacity.toLocaleString()} KG</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Fleet & Driver Render
+        function renderFleet() {
+            const tbody = document.getElementById('fleetTableBody');
+            tbody.innerHTML = '';
+
+            appState.vehicles.forEach(v => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 px-3 font-bold text-forest-800">${v.RegistrationNumber}</td>
+                    <td class="py-2 px-3">${v.VehicleType}</td>
+                    <td class="py-2 px-3">${v.Capacity.toLocaleString()} KG</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Finance & Invoice Render
+        function renderFinance() {
+            const tbody = document.getElementById('financeTableBody');
+            tbody.innerHTML = '';
+
+            appState.invoices.forEach(inv => {
+                const s = appState.shipments.find(item => item.ShipmentID === inv.ShipmentID);
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-beige-100/50';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-slatewood">INV-${inv.InvoiceID}</td>
+                    <td class="py-2.5 px-3 font-bold text-forest-800">${s ? s.ShipmentReference : 'N/A'}</td>
+                    <td class="py-2.5 px-3 font-bold text-forest-900">$${inv.TotalAmount.toLocaleString()}</td>
+                    <td class="py-2.5 px-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${inv.InvoiceStatus === 'Paid' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300'}">
+                            ${inv.InvoiceStatus}
+                        </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                        <button onclick="togglePaymentState(${inv.InvoiceID})" class="text-xs font-semibold text-forest-700 hover:underline">
+                            ${inv.InvoiceStatus === 'Paid' ? 'Mark Unpaid' : 'Record Payment'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Dropdown options populator
+        function populateFormDropdowns() {
+            const expSelect = document.getElementById('modal-exporter');
+            expSelect.innerHTML = '';
+            appState.exporters.forEach(e => {
+                expSelect.innerHTML += `<option value="${e.ExporterID}">${e.CompanyName}</option>`;
+            });
+
+            const cliSelect = document.getElementById('modal-client');
+            cliSelect.innerHTML = '';
+            appState.clients.forEach(c => {
+                cliSelect.innerHTML += `<option value="${c.ClientID}">${c.CompanyName}</option>`;
+            });
+
+            const pickupShipSelect = document.getElementById('pickupShipmentSelect');
+            pickupShipSelect.innerHTML = '';
+            appState.shipments.forEach(s => {
+                pickupShipSelect.innerHTML += `<option value="${s.ShipmentID}">${s.ShipmentReference}</option>`;
+            });
+
+            const pickupDrvSelect = document.getElementById('pickupDriverSelect');
+            pickupDrvSelect.innerHTML = '';
+            appState.drivers.forEach(d => {
+                pickupDrvSelect.innerHTML += `<option value="${d.DriverID}">${d.FullName}</option>`;
+            });
+
+            const pickupVehSelect = document.getElementById('pickupVehicleSelect');
+            pickupVehSelect.innerHTML = '';
+            appState.vehicles.forEach(v => {
+                pickupVehSelect.innerHTML += `<option value="${v.VehicleID}">${v.RegistrationNumber} (${v.VehicleType})</option>`;
+            });
+        }
+
+        // Handlers
+        function handleNewBookingSubmit(e) {
+            e.preventDefault();
+            const ref = document.getElementById('modal-ref').value;
+            const expId = parseInt(document.getElementById('modal-exporter').value);
+            const cliId = parseInt(document.getElementById('modal-client').value);
+            const method = document.getElementById('modal-method').value;
+            const sDate = document.getElementById('modal-date').value;
+            const eta = document.getElementById('modal-eta').value;
+
+            const newId = appState.shipments.length + 1;
+            appState.shipments.unshift({
+                ShipmentID: newId,
+                ShipmentReference: ref,
+                ExporterID: expId,
+                ClientID: cliId,
+                ShipmentDate: sDate,
+                EstimatedDeliveryDate: eta,
+                TransportMethod: method,
+                ShipmentStatus: 'Booked'
+            });
+
+            appState.invoices.push({
+                InvoiceID: appState.invoices.length + 1,
+                ShipmentID: newId,
+                InvoiceDate: sDate,
+                DueDate: eta,
+                TotalAmount: 12500.00,
+                Currency: 'USD',
+                InvoiceStatus: 'Unpaid'
+            });
+
+            refreshFullUI();
+            closeNewBookingModal();
+            showToast(`Shipment ${ref} created successfully!`);
+        }
+
+        function handleUpdateTrackingSubmit(e) {
+            e.preventDefault();
+            const ref = document.getElementById('currentTrackingRef').innerText;
+            const s = appState.shipments.find(item => item.ShipmentReference === ref);
+            if (!s) return;
+
+            const stage = document.getElementById('track-modal-stage').value;
+            const loc = document.getElementById('track-modal-location').value;
+            const rem = document.getElementById('track-modal-remarks').value;
+
+            appState.trackingLogs.push({
+                TrackingID: appState.trackingLogs.length + 1,
+                ShipmentID: s.ShipmentID,
+                Status: stage,
+                Location: loc,
+                Remarks: rem,
+                RecordedAt: new Date().toLocaleString()
+            });
+
+            s.ShipmentStatus = stage;
+            refreshFullUI();
+            closeUpdateTrackingModal();
+            showToast(`Tracking stage logged for ${ref}`);
+        }
+
+        function handleDispatchPickupSubmit(e) {
+            e.preventDefault();
+            const shipId = parseInt(document.getElementById('pickupShipmentSelect').value);
+            showToast(`Pickup scheduled for Shipment #${shipId}`);
+        }
+
+        function togglePaymentState(invId) {
+            const inv = appState.invoices.find(i => i.InvoiceID === invId);
+            if (inv) {
+                inv.InvoiceStatus = inv.InvoiceStatus === 'Paid' ? 'Unpaid' : 'Paid';
+                refreshFullUI();
+                showToast(`Updated Invoice #${invId} status to ${inv.InvoiceStatus}`);
+            }
+        }
+
+        function quickTrack(ref) {
+            switchTab('tracking');
+            document.getElementById('trackingSearchInput').value = ref;
+            searchTrackingLog();
+        }
+
+        // Navigation Tabs & Modals
+        function switchTab(tabId) {
+            document.querySelectorAll('main > div > section').forEach(sec => sec.classList.add('hidden'));
+            const target = document.getElementById(`module-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-forest-600', 'text-white', 'shadow-sm');
+                btn.classList.add('text-beige-200');
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-forest-600', 'text-white', 'shadow-sm');
+                activeBtn.classList.remove('text-beige-200');
+            }
+
+            const titles = {
+                'dashboard': 'Overview Dashboard',
+                'shipments': 'Shipment Bookings',
+                'tracking': 'Live Export Tracking Engine',
+                'warehouse': 'Warehouse Storage Facilities',
+                'fleet': 'Logistics Dispatch',
+                'finance': 'Billing & Invoices'
+            };
+            document.getElementById('pageTitle').innerText = titles[tabId] || 'AgriLink';
+
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebarBackdrop').classList.add('hidden');
+        }
+
+        function openNewBookingModal() { document.getElementById('newBookingModal').classList.remove('hidden'); }
+        function closeNewBookingModal() { document.getElementById('newBookingModal').classList.add('hidden'); }
+        function openUpdateTrackingModal() { document.getElementById('updateTrackingModal').classList.remove('hidden'); }
+        function closeUpdateTrackingModal() { document.getElementById('updateTrackingModal').classList.add('hidden'); }
+
+        function showToast(msg) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'bg-forest-800 text-white text-xs font-semibold px-4 py-3 rounded-lg shadow-xl border border-forest-600 flex items-center space-x-2 transition-all duration-300 pointer-events-auto';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> <span>${msg}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
